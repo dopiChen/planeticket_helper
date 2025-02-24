@@ -1,13 +1,50 @@
-// 基础类型
+
+//机票搜索页面
+// 机票列表对象
+export interface Flight {
+  id: string;
+  airline: string;
+  flightNumber: string;
+  departure: string;
+  arrival: string;
+  departureTime: string;
+  arrivalTime: string;
+  duration: string;
+  price: number;
+  aircraft: string;
+  stops: number;
+
+}
+
+// 机票搜索条件
+export interface SearchCriteria{
+  airlines: string[],
+  priceRange: number[],
+  departureTime: string,
+  aircraftTypes: string[],
+  departureCity: string,
+  arrivalCity: string,
+  departureDate: string | null,
+}
+
+
+//智能组合页面
+
+//路线对象和价格
 export interface Route {
-  from: {
-    name: string;
-    position: [number, number];
-  };
-  to: {
-    name: string;
-    position: [number, number];
-  };
+  dept_city: string;
+  arri_city: string;
+  dept_pos: [number, number];
+  arri_pos: [number, number];
+  price: string;
+}
+
+// 智能中转搜索条件
+
+export interface SmartRoutingCriteria {
+  departureCity: string;
+  arrivalCity: string;
+  departureDate: string;  
 }
 
 export interface City {

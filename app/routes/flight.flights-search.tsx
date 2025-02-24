@@ -4,7 +4,7 @@ import {
   Row,
   Col,
   Checkbox,
-  AutoComplete
+  AutoComplete,
 } from 'antd';
 import {
   SearchOutlined,
@@ -15,39 +15,27 @@ import {
   CalendarOutlined,
   FilterOutlined
 } from '@ant-design/icons';
-import moment, { Moment } from 'moment';
-
+import { Moment } from 'moment';
 import {airports} from 'public/assets/cities'
 import {airlineCodes} from 'public/assets/airlineCode'
-
+import  {Flight, SearchCriteria} from 'app/utils/types'
+import { submitFilters } from 'app/utils/api';
 const { Title } = Typography;
 const { Option } = Select;
 
-interface Flight {
-  id: string;
-  airline: string;
-  flightNumber: string;
-  departure: string;
-  arrival: string;
-  departureTime: string;
-  arrivalTime: string;
-  duration: string;
-  price: number;
-  aircraft: string;
-  stops: number;
-}
-
 const FlightSearch = () => {
   // 创建状态对象来存储筛选条件
-  const [filters, setFilters] = useState({
-    airlines: [] as string[],
-    priceRange: [0, 5000],
-    departureTime: 'all',
-    aircraftTypes: [] as string[],
-    departureCity: '',
-    arrivalCity: '',
-    departureDate: null as Moment | null,
-  });
+  const [filters, setFilters] = useState<SearchCriteria>(
+    {
+      airlines: [],
+      priceRange: [0, 5000],
+      departureTime: 'all',
+      aircraftTypes: [],
+      departureCity: '',
+      arrivalCity: '',
+      departureDate: null, // 如果使用 moment.js
+    }
+  );
 
   // 创建状态对象来存储航班数据
   const [flights, setFlights] = useState<Flight[]>([]); // 初始化航班数据状态
@@ -83,36 +71,21 @@ const FlightSearch = () => {
   };
 
   // 更新出发日期
-  const handleDateChange = (date: moment.Moment | null) => {
-    setFilters((prev) => ({ ...prev, departureDate: date }));
+  const handleDateChange = (date: Moment | null) => {
+    const formattedDate = date ? date.format('YYYYMMDD') : null; // 转换为字符串格式
+    setFilters((prev) => ({ ...prev, departureDate: formattedDate })); // 更新状态
   };
 
   // 提交筛选条件到后端
   const handleSubmit = async () => {
-    try {
-      const response = await fetch('http://127.0.0.1:4523/m1/5909167-5596115-default/api/flight/flights-search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(filters), // 将筛选条件作为请求体发送
-      });
-      if (!response.ok) {
-        throw new Error('请求失败');
-      }
-      const result = await response.json(); // 获取完整的响应对象
-      console.log('返回的数据:', result);
+      const data = await submitFilters(filters);
 
       // 检查返回的数据是否成功，并提取 data 数组
-      if (result.success && Array.isArray(result.data)) {
-        setFlights(result.data); // 更新航班数据状态
+      if (data.length > 0) {
+        setFlights(data); // 更新航班数据状态
       } else {
-        console.error('返回的数据格式不正确:', result);
         setFlights([]); // 如果格式不正确，设置为空数组
       }
-    } catch (error) {
-      console.error('请求错误:', error);
-    }
   };
 
   const columns = [
@@ -280,6 +253,14 @@ const FlightSearch = () => {
                 <Checkbox value="a320">空客A320</Checkbox>
                 <Checkbox value="a320neo">空客A320neo</Checkbox>
                 <Checkbox value="a350">空客A350</Checkbox>
+                <Checkbox value="a330-300">空客A330-300</Checkbox>
+                <Checkbox value="777-300er">波音777-300ER</Checkbox>
+                <Checkbox value="a380">空客A380</Checkbox>
+                <Checkbox value="emb190">巴西航空工业E190</Checkbox>
+                <Checkbox value="crj900">加拿大航空CRJ900</Checkbox>
+                <Checkbox value="q400">德哈维兰Q400</Checkbox>
+                <Checkbox value="arj21">中国商飞ARJ21</Checkbox>
+                <Checkbox value="c919">中国商飞C919</Checkbox>
               </Checkbox.Group>
             </div>
 
@@ -295,7 +276,7 @@ const FlightSearch = () => {
             <Table 
               columns={columns} 
               dataSource={flights}
-              pagination={{ pageSize: 5 }}
+              pagination={{ pageSize: 6 }}
               rowKey="id"
             />
           </Card>
