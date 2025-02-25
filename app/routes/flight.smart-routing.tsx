@@ -1,7 +1,7 @@
-import { Card, Form,  DatePicker, Button,AutoComplete } from 'antd';
-import { SearchOutlined,RocketOutlined,} from '@ant-design/icons';
+import { Card, Form,  DatePicker, Button,AutoComplete,Col,List,Typography } from 'antd';
+import { SearchOutlined,RocketOutlined,ClockCircleOutlined } from '@ant-design/icons';
 import { useState, useEffect } from 'react';
-import { Route,SmartRoutingCriteria } from 'app/utils/types';
+import { Route,SmartRoutingCriteria,CombinedRoute } from 'app/utils/types';
 import { submitRouteFilters } from 'app/utils/api';
 import {airports} from 'public/assets/cities'
 
@@ -16,27 +16,26 @@ function useHydrated() {
 
 // 创建 Map 组件
 // 设置地图显示样式
-function Map({ routes }: { routes: Route[] }) {
+function Map({ routes, style }: { routes: Route[]; style?: React.CSSProperties }) {
   const [MapComponent, setMapComponent] = useState<React.ReactElement | null>(null);
 
   useEffect(() => {
-    import('react-leaflet').then(({ MapContainer, TileLayer, Marker, Popup, Polyline }) => {
+    import('react-leaflet').then(({ MapContainer, TileLayer, Marker, Popup, Polyline, CircleMarker }) => {
       import('leaflet').then((L) => {
         import('leaflet/dist/leaflet.css');
         
-        const DefaultIcon = L.icon({
-          iconUrl: '/marker-icon.png',
-          shadowUrl: '/marker-shadow.png',
-          iconSize: [25, 41],
-          iconAnchor: [12, 41]
+        // 使用对象而不是 Map
+        const cityPositions: Record<string, [number, number]> = {};
+        routes.forEach(route => {
+          cityPositions[route.dept_city] = route.dept_pos;
+          cityPositions[route.arri_city] = route.arri_pos;
         });
-        L.Marker.prototype.options.icon = DefaultIcon;
 
         setMapComponent(
           <MapContainer 
-            center={[35, 105]} 
-            zoom={4} 
-            style={{ height: '600px', width: '100%', borderRadius: '8px' }}
+            center={[35.8617, 104.1954]}
+            zoom={5} 
+            style={{ height: '600px', width: '100%', ...style }}
             zoomControl={true}
             scrollWheelZoom={true}
           >
@@ -45,6 +44,22 @@ function Map({ routes }: { routes: Route[] }) {
               subdomains={['1', '2', '3', '4']}
               attribution='&copy; 高德地图'
             />
+
+            {/* 绘制城市标记 */}
+            {Object.entries(cityPositions).map(([cityName, position]) => (
+              <CircleMarker 
+                key={cityName}
+                center={position}
+                radius={8}
+                fillColor="#52c41a"
+                color="#fff"
+                weight={2}
+                opacity={1}
+                fillOpacity={0.8}
+              />
+            ))}
+
+            {/* 绘制航线 */}
             {routes.map((route, idx) => {
               // 计算曲线的控制点（使路线呈弧形）
               const latlngs = route.dept_pos;
@@ -120,7 +135,7 @@ function Map({ routes }: { routes: Route[] }) {
         );
       });
     });
-  }, [routes]);
+  }, [routes, style]);
 
   return MapComponent;
 }
@@ -133,19 +148,30 @@ export default function SmartRouting() {
     arrivalCity: '',
     departureDate: ''
   }); 
+
+  const [routes, setRoute] = useState<Route[]>([]);
+  const[combineroutes,setCombineroutes]=useState<CombinedRoute[]>([]);
+  const [showList, setShowList] = useState(false);
+    // 提取所有航段的方法
+  const extractAllRoutes = (combinedRoutes: CombinedRoute[]): Route[] => {
+    return combinedRoutes.flatMap(route => route.segments);
+  };
   // 提交筛选条件到后端
   const handleSubmit = async () => {
     const data = await submitRouteFilters(filters);
-    //更新地图
-    // 检查返回的数据是否成功，并提取 data 数组
+    
     if (data.length > 0) {
-      setRoute(data); // 更新航班数据状态
+      const allRoutes = extractAllRoutes(data);
+      setRoute(allRoutes);
+      setCombineroutes(data);
+      setShowList(true);
+      // 地图会自动调整到新的中心点
     } else {
-      setRoute([]); // 如果格式不正确，设置为空数组
+      setRoute([]);
+      setCombineroutes([]);
+      setShowList(false);
     }
-};
-
-const [routes, setRoute] = useState<Route[]>([]);
+  };
   
   //更新函数
   // 更新出发地
@@ -161,58 +187,7 @@ const [routes, setRoute] = useState<Route[]>([]);
     setFilters((prev) => ({ ...prev, departureDate: date }));
   }
 
-  //路线实例数据
-  // const [routes] = useState<Route[]>([
-  //   {
-  //     dept_city: '北京',
-  //     arri_city: '上海',
-  //     dept_pos: [39.9042, 116.4074],
-  //     arri_pos: [31.2304, 121.4737],
-  //     price: '1,200'
-  //   },
-  //   {
-  //     dept_city: '上海',
-  //     arri_city: '广州',
-  //     dept_pos: [31.2304, 121.4737],
-  //     arri_pos: [23.1291, 113.2644],
-  //     price: '1,500'
-  //   },
-  //   {
-  //     dept_city: '广州',
-  //     arri_city: '深圳',
-  //     dept_pos: [23.1291, 113.2644],
-  //     arri_pos: [22.5431, 114.0579],
-  //     price: '800'
-  //   },
-  //   {
-  //     dept_city: '成都',
-  //     arri_city: '北京',
-  //     dept_pos: [30.5728, 104.0668],
-  //     arri_pos: [39.9042, 116.4074],
-  //     price: '1,700'
-  //   },
-    // {
-    //   dept_city: '重庆',
-    //   arri_city: '上海',
-    //   dept_pos: [29.5630, 106.5516],
-    //   arri_pos: [31.2304, 121.4737],
-    //   price: '1,400'
-    // },
-    // {
-    //   dept_city: '杭州',
-    //   arri_city: '南京',
-    //   dept_pos: [30.2741, 120.1551],
-    //   arri_pos: [32.0603, 118.7969],
-    //   price: '1,100'
-    // },
-    // {
-    //   dept_city: '武汉',
-    //   arri_city: '厦门',
-    //   dept_pos: [30.5928, 114.3055],
-    //   arri_pos: [24.4798, 118.0895],
-    //   price: '1,300'
-    // }
-  // ]);
+  
   // 生成自动补全选项
   const options = airports.map(loc => ({
     value: `${loc.value}`, // 显示地点和三字码
@@ -220,24 +195,26 @@ const [routes, setRoute] = useState<Route[]>([]);
   return (
     <Card title="智能航线拼接" className="route-card">
       <Form layout="inline" style={{ marginBottom: '20px' }}>
-        <Form.Item label="出发地">
-          <AutoComplete
-            value={filters.departureCity}
-            options={options}
-            onChange={handleDeptChange}
-            placeholder="请输入出发城市"
-            prefix={<RocketOutlined rotate={-45} />}
-          />
-        </Form.Item>
-        <Form.Item label="目的地">
-          <AutoComplete
-            value={filters.arrivalCity}
-            options={options}
-            onChange={handleArriChange}
-            placeholder="请输入目的地"
-            prefix={<RocketOutlined rotate={45} />}
-          />
-        </Form.Item>
+      <Col span={7}>
+              <Form.Item label="出发地">
+                <AutoComplete
+                  options={options}
+                  onChange={handleDeptChange}
+                  placeholder="请输入出发城市"
+                  prefix={<RocketOutlined rotate={-45} />}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={7}>
+              <Form.Item label="目的地">
+                <AutoComplete
+                  options={options}
+                  onChange={handleArriChange}
+                  placeholder="请输入到达城市"
+                  prefix={<RocketOutlined rotate={45} />}
+                />
+              </Form.Item>
+            </Col>
         <Form.Item label="出发日期">
           <DatePicker 
             onChange={(date) => handleDateChange(date ? date.format('YYYYMMDD') : '')}
@@ -249,11 +226,101 @@ const [routes, setRoute] = useState<Route[]>([]);
           </Button>
         </Form.Item>
       </Form>
-
       <div style={{ display: 'flex', gap: '20px' }}>
-        <div style={{ flex: 2 }}>
+        {/* 列表部分 - 条件渲染 */}
+        {showList && (
+          <div style={{ 
+            flex: '0 0 350px',
+            marginRight: '20px'
+          }}>
+            <List
+              itemLayout="vertical"
+              dataSource={combineroutes}
+              renderItem={(route: CombinedRoute) => (
+                <List.Item>
+                  <Card 
+                    size="small" 
+                    style={{ 
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      borderRadius: '8px'
+                    }}
+                  >
+                    {/* 路线类型和总价格显示 */}
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      marginBottom: '12px',
+                      padding: '4px 8px',
+                      backgroundColor: route.isDirectFlight ? '#e6f7ff' : '#fff7e6',
+                      borderRadius: '4px'
+                    }}>
+                      <Typography.Text strong>
+                        {route.isDirectFlight ? '直飞' : `${route.transferCount}次中转`}
+                      </Typography.Text>
+                      <Typography.Text type="danger" strong>
+                        ¥{route.totalPrice}
+                      </Typography.Text>
+                    </div>
+
+                    {/* 航段信息 */}
+                    {route.segments.map((segment, index) => (
+                      <div key={index} style={{ 
+                        padding: '8px',
+                        backgroundColor: '#fafafa',
+                        borderRadius: '4px',
+                        marginBottom: index < route.segments.length - 1 ? '8px' : 0
+                      }}>
+                        {/* 出发信息 */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <div>
+                            <Typography.Text strong>{segment.dept_city}</Typography.Text>
+                            <Typography.Text type="secondary" style={{ marginLeft: '8px' }}>
+                              {new Date(segment.departureTime).toLocaleTimeString()}
+                            </Typography.Text>
+                          </div>
+                          <Typography.Text type="secondary">{segment.flightNumber}</Typography.Text>
+                        </div>
+
+                        {/* 到达信息 */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <div>
+                            <Typography.Text strong>{segment.arri_city}</Typography.Text>
+                            <Typography.Text type="secondary" style={{ marginLeft: '8px' }}>
+                              {new Date(segment.arrivalTime).toLocaleTimeString()}
+                            </Typography.Text>
+                          </div>
+                          <Typography.Text>¥{segment.price}</Typography.Text>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* 中转信息 */}
+                    {!route.isDirectFlight && route.transferDuration && (
+                      <div style={{ 
+                        marginTop: '8px',
+                        padding: '4px 8px',
+                        backgroundColor: '#fff7e6',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        color: '#faad14'
+                      }}>
+                        <ClockCircleOutlined /> 总中转时间：{Math.floor(route.transferDuration / 60)}小时{route.transferDuration % 60}分钟
+                      </div>
+                    )}
+                  </Card>
+                </List.Item>
+              )}
+            />
+          </div>
+        )}
+        
+        {/* 地图部分 */}
+        <div style={{ flex: 1, minHeight: '600px' }}>
           {isHydrated ? (
-            <Map routes={routes} />
+            <Map 
+              routes={routes} 
+              style={{ height: '100%', borderRadius: '8px' }}
+            />
           ) : (
             <div style={{ 
               height: '600px', 
@@ -267,37 +334,6 @@ const [routes, setRoute] = useState<Route[]>([]);
             </div>
           )}
         </div>
-
-        {/* <div style={{ flex: 1 }}>
-          <List
-            itemLayout="vertical"
-            dataSource={routes}
-            renderItem={route => (
-              <List.Item>
-                <Card 
-                  size="small" 
-                  style={{ 
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                    borderRadius: '8px'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                    <EnvironmentOutlined style={{ color: '#1890ff' }} />
-                    <Typography.Text strong>{route.from.name}</Typography.Text>
-                    <ArrowRightOutlined style={{ color: '#1890ff' }} />
-                    <Typography.Text strong>{route.to.name}</Typography.Text>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <DollarOutlined style={{ color: '#52c41a' }} />
-                    <Typography.Text type="success" strong>
-                      {route.price}
-                    </Typography.Text>
-                  </div>
-                </Card>
-              </List.Item>
-            )}
-          />
-        </div> */}
       </div>
     </Card>
   );

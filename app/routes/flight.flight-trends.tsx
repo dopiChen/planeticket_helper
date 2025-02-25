@@ -1,5 +1,5 @@
-import { Card, Row, Col, Select, Radio, Tooltip, Tag, Statistic } from 'antd';
-import { Heatmap, Column } from '@ant-design/plots';
+import { Card, Row, Col, Select, Radio, Tooltip, Tag, } from 'antd';
+import { Heatmap, Column,Bar,Pie } from '@ant-design/plots';
 import { useState } from 'react';
 import { InfoCircleOutlined } from '@ant-design/icons';
 
@@ -8,15 +8,21 @@ export default function FlightTrends() {
   const [timeRange, setTimeRange] = useState('month');
   const [activeView, setActiveView] = useState('main'); // 'main', 'trends', 'top5'
 
-  // 热门航线数据
-  const hotRoutes = [
-    { from: '北京', to: '上海', count: 150, avgPrice: 1200 },
-    { from: '广州', to: '北京', count: 120, avgPrice: 1500 },
-    { from: '深圳', to: '上海', count: 100, avgPrice: 1300 },
-    { from: '成都', to: '北京', count: 90, avgPrice: 1600 },
-    { from: '杭州', to: '北京', count: 85, avgPrice: 1100 },
-  ];
-
+  // 添加时段和经停数据
+const priceData = {
+  dayTime: [
+    { time: '凌晨(00:00-06:00)', avgPrice: 980, count: 120 },
+    { time: '早上(06:00-12:00)', avgPrice: 1200, count: 350 },
+    { time: '下午(12:00-18:00)', avgPrice: 1150, count: 280 },
+    { time: '晚上(18:00-24:00)', avgPrice: 1050, count: 220 },
+  ],
+  stopover: [
+    { type: '直飞', percentage: 60, avgPrice: 1200 },
+    { type: '经停1次', percentage: 25, avgPrice: 1050 },
+    { type: '经停2次', percentage: 10, avgPrice: 950 },
+    { type: '经停2次以上', percentage: 5, avgPrice: 850 },
+  ]
+};
   // 优惠航班数据
   const discountFlights = [
     { route: '北京-上海', discount: '7.5折', originalPrice: 1500, currentPrice: 1125 },
@@ -73,8 +79,8 @@ export default function FlightTrends() {
               style={{ marginRight: 16 }}
             >
               <Radio.Button value="main">主视图</Radio.Button>
-              <Radio.Button value="trends">趋势分析</Radio.Button>
-              <Radio.Button value="top5">热门航线</Radio.Button>
+              <Radio.Button value="trends">数量分析</Radio.Button>
+              <Radio.Button value="top5">时段分析</Radio.Button>
             </Radio.Group>
             <Radio.Group value={timeRange} onChange={e => setTimeRange(e.target.value)}>
               <Radio.Button value="week">周视图</Radio.Button>
@@ -146,7 +152,17 @@ export default function FlightTrends() {
           </Row>
         </>
       ) : activeView === 'trends' ? (
-        <Card title="航班趋势分析">
+        <Card 
+        title={
+          <span>
+            航班数量分析 
+            <Tooltip title="展示不同月份的航班数量起伏">
+              <InfoCircleOutlined style={{ marginLeft: 8 }} />
+            </Tooltip>
+          </span>
+        }
+        style={{ marginBottom: 24 }}
+      >
           <Column
             data={monthlyTrends}
             xField="month"
@@ -173,24 +189,50 @@ export default function FlightTrends() {
           />
         </Card>
       ) : (
-        <Card title="热门航线TOP5">
-          <Row gutter={[16, 16]}>
-            {hotRoutes.map((route, index) => (
-              <Col span={4} key={index}>
-                <Card bodyStyle={{ padding: 16, textAlign: 'center' }}>
-                  <Statistic
-                    title={`${route.from} → ${route.to}`}
-                    value={route.count}
-                    suffix="班/周"
-                    valueStyle={{ color: '#1890ff' }}
-                  />
-                  <div style={{ marginTop: 8 }}>
-                    均价：¥{route.avgPrice}
-                  </div>
-                </Card>
-              </Col>
-            ))}
-          </Row>
+        <Card 
+        title={
+          <span>
+            航班时段经停分布 
+            <Tooltip title="展示一天内不同时段的航班数量和经停次数">
+              <InfoCircleOutlined style={{ marginLeft: 8 }} />
+            </Tooltip>
+          </span>
+        }
+        style={{ marginBottom: 24 }}
+      >
+                <Row gutter={24}>
+        <Col span={12}>
+          <Card title="时段分布">
+            <Bar
+              data={priceData.dayTime}
+              xField="time"
+              yField="avgPrice"
+              columnStyle={{
+                radius: [4, 4, 0, 0],
+              }}
+              label={{
+                position: 'top',
+              }}
+            />
+          </Card>
+        </Col>
+        <Col span={12}>
+          <Card title="经停分析">
+            <Pie
+              data={priceData.stopover}
+              angleField="percentage"
+              colorField="type"
+              radius={0.8}
+              label={{
+                type: 'outer',
+              }}
+              interactions={[
+                { type: 'element-active' },
+              ]}
+            />
+          </Card>
+        </Col>
+      </Row>
         </Card>
       )}
     </div>

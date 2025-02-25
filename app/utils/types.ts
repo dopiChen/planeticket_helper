@@ -1,5 +1,5 @@
 
-//机票搜索页面
+//...机票搜索页面
 // 机票列表对象
 export interface Flight {
   id: string;
@@ -28,7 +28,7 @@ export interface SearchCriteria{
 }
 
 
-//智能组合页面
+//...智能组合页面 
 
 //路线对象和价格
 export interface Route {
@@ -36,7 +36,21 @@ export interface Route {
   arri_city: string;
   dept_pos: [number, number];
   arri_pos: [number, number];
+  departureTime: string;
+  arrivalTime: string;
+  flightNumber: string;
   price: string;
+}
+
+
+// 完整路线（可能包含多个航段）
+export interface CombinedRoute {
+  segments: Route[];     // 航段数组
+  totalPrice: number;            // 总价格
+  totalDuration: number;         // 总飞行时间（分钟）
+  transferCount: number;         // 中转次数
+  transferDuration?: number;     // 总中转时间（分钟）
+  isDirectFlight: boolean;       // 是否直飞
 }
 
 // 智能中转搜索条件
@@ -47,109 +61,31 @@ export interface SmartRoutingCriteria {
   departureDate: string;  
 }
 
-export interface City {
-  name: string;
-  position: [number, number];
+
+//...价格分析页面
+
+//价格分析搜索条件
+
+export interface PriceAnalysisCriteria {
+  departureCity: string;//出发城市
+  arrivalCity: string;//到达城市
+  startDate: string;//开始日期
+  endDate: string;//结束日期
 }
 
-// 智能路由页面
-export interface SmartRoutingResult extends Route {
-  price: string;
-  duration: string;
-  stops: number;
+
+//价格分析数据
+
+export interface PriceAnalysisData {
+  date: string;
+  price: number;
 }
 
-// 价格分析页面
-export interface PriceData {
-  trend: {
-    date: string;
-    price: number;
-  }[];
-  dayTime: {
-    time: string;
-    avgPrice: number;
-    count: number;
-  }[];
-  stopover: {
-    type: string;
-    percentage: number;
-    avgPrice: number;
-  }[];
-}
 
-// 航班趋势页面
-export interface FlightTrend {
-  hotRoutes: {
-    from: string;
-    to: string;
-    count: number;
-    avgPrice: number;
-  }[];
-  discountFlights: {
-    route: string;
-    discount: string;
-    originalPrice: number;
-    currentPrice: number;
-  }[];
-  heatmapData: {
-    day: string;
-    hour: number;
-    value: number;
-  }[];
-  monthlyTrends: {
-    month: string;
-    flights: number;
-    load: number;
-    price: number;
-    passengerCount: number;
-  }[];
-}
 
-// 何时飞页面
-export interface WhenToFlyData {
-  bestTime: {
-    bestDay: string;
-    bestDayDiscount: number;
-    bestTimeSlot: string;
-    bestTimeDiscount: number;
-    averageSaving: number;
-  };
-  weekdayData: {
-    day: string;
-    avgPrice: number;
-    discount: number;
-    flightCount: number;
-  }[];
-}
 
-// 季节趋势页面
-export interface SeasonTrendData {
-  trends: {
-    month: string;
-    passengers: number;
-    flights: number;
-    avgPrice: number;
-  }[];
-  peakSeasons: {
-    season: string;
-    period: string;
-    priceIncrease: string;
-  }[];
-  distribution: {
-    type: string;
-    value: number;
-  }[];
-}
 
-// 请求参数类型
-export interface RouteParams {
-  from: string;
-  to: string;
-  date?: string;
-}
 
-export interface DateRangeParams {
-  from: string;
-  to: string;
-  route: string;
-}
+
+
+
