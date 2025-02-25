@@ -1,77 +1,97 @@
-import { Card, Row, Col, Select, Radio, Tooltip, Tag, } from 'antd';
+import { Card, Row, Col, Form, Radio, Tooltip,AutoComplete,DatePicker,Button } from 'antd';
 import { Heatmap, Column,Bar,Pie } from '@ant-design/plots';
 import { useState } from 'react';
-import { InfoCircleOutlined } from '@ant-design/icons';
-
+import { InfoCircleOutlined,RocketOutlined,CalendarOutlined,SearchOutlined } from '@ant-design/icons';
+import { FlightTrendsCriteria } from 'app/utils/types';
+import {airports} from 'public/assets/cities'
+import type { Dayjs } from 'dayjs';
+import { HeatmapData, FlightCountDistribution, FlightTimeDistribution, FlightStopCountDistribution } from 'app/utils/types';
+import { submitFlightTrendsFilters } from 'app/utils/api';
 export default function FlightTrends() {
-  const [selectedRoute, setSelectedRoute] = useState('北京-上海');
-  const [timeRange, setTimeRange] = useState('month');
   const [activeView, setActiveView] = useState('main'); // 'main', 'trends', 'top5'
+  const [criteria, setCriteria] = useState<FlightTrendsCriteria>({
+    departureCity: '',
+    arrivalCity: '',
+    departureDate: '',
+  });
+  const [heatmapData,setHeatmapData] = useState<HeatmapData[]>([]);
+  const [monthlyTrends,setMonthlyTrends] = useState<FlightCountDistribution[]>([]);
+  const [dayTime,setDayTime] = useState<FlightTimeDistribution[]>([]);
+  const [stopover,setStopover] = useState<FlightStopCountDistribution[]>([]);
+  const handleDepartureChange = (value: string) => {
+    setCriteria(prev => ({ ...prev, departureCity: value }));
+  };
 
-  // 添加时段和经停数据
-const priceData = {
-  dayTime: [
-    { time: '凌晨(00:00-06:00)', avgPrice: 980, count: 120 },
-    { time: '早上(06:00-12:00)', avgPrice: 1200, count: 350 },
-    { time: '下午(12:00-18:00)', avgPrice: 1150, count: 280 },
-    { time: '晚上(18:00-24:00)', avgPrice: 1050, count: 220 },
-  ],
-  stopover: [
-    { type: '直飞', percentage: 60, avgPrice: 1200 },
-    { type: '经停1次', percentage: 25, avgPrice: 1050 },
-    { type: '经停2次', percentage: 10, avgPrice: 950 },
-    { type: '经停2次以上', percentage: 5, avgPrice: 850 },
-  ]
+  const handleArrivalChange = (value: string) => {
+    setCriteria(prev => ({ ...prev, arrivalCity: value }));
+  };
+  const handleDateChange = (date: Dayjs | null) => {
+    const formattedDate = date ? date.format('YYYYMMDD') : ''; 
+    setCriteria(prev => ({ ...prev, departureDate: formattedDate }));
+  };
+
+   // 提交筛选条件到后端
+   const handleSubmit = async () => {
+    const data = await submitFlightTrendsFilters(criteria);
+    // 检查返回的数据是否成功，并提取 data 数组
+    if (data) {
+      setHeatmapData(data['heatmapData']);
+      setMonthlyTrends(data['flightCountDistribution']);
+      setDayTime(data['flightTimeDistribution']);
+      setStopover(data['flightStopCountDistribution']);
+      console.log(stopover.length);// 更新航班数据状态
+    } else {
+      console.log('数据为空');
+      setHeatmapData([]);
+      setMonthlyTrends([]);
+      setDayTime([]);
+      setStopover([]);
+
+    }
 };
-  // 优惠航班数据
-  const discountFlights = [
-    { route: '北京-上海', discount: '7.5折', originalPrice: 1500, currentPrice: 1125 },
-    { route: '广州-上海', discount: '8折', originalPrice: 1300, currentPrice: 1040 },
-    { route: '深圳-北京', discount: '8.5折', originalPrice: 1800, currentPrice: 1530 },
-    { route: '成都-广州', discount: '7折', originalPrice: 1400, currentPrice: 980 },
-    { route: '杭州-成都', discount: '7.8折', originalPrice: 1200, currentPrice: 936 },
-  ];
+  // 生成自动补全选项
+  const options = airports.map(loc => ({
+    value: `${loc.value}`, // 显示地点和三字码
+  }));
 
-  // 航班热力图数据
-  const heatmapData = Array.from({ length: 7 }, (_, i) => 
-    Array.from({ length: 24 }, (_, j) => ({
-      day: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'][i],
-      hour: j,
-      value: Math.floor(Math.random() * 100) + 20
-    }))
-  ).flat();
-
-  // 扩展月度趋势数据
-  const monthlyTrends = [
-    { month: '1月', flights: 450, load: 0.85, price: 1200, passengerCount: 38250 },
-    { month: '2月', flights: 420, load: 0.82, price: 1180, passengerCount: 34440 },
-    { month: '3月', flights: 480, load: 0.88, price: 1250, passengerCount: 42240 },
-    { month: '4月', flights: 500, load: 0.90, price: 1300, passengerCount: 45000 },
-    { month: '5月', flights: 520, load: 0.92, price: 1350, passengerCount: 47840 },
-    { month: '6月', flights: 550, load: 0.95, price: 1400, passengerCount: 52250 },
-    { month: '7月', flights: 580, load: 0.96, price: 1450, passengerCount: 55680 },
-    { month: '8月', flights: 600, load: 0.98, price: 1500, passengerCount: 58800 },
-    { month: '9月', flights: 520, load: 0.91, price: 1380, passengerCount: 47320 },
-    { month: '10月', flights: 540, load: 0.93, price: 1420, passengerCount: 50220 },
-    { month: '11月', flights: 480, load: 0.87, price: 1280, passengerCount: 41760 },
-    { month: '12月', flights: 510, load: 0.89, price: 1320, passengerCount: 45390 },
-  ];
 
   return (
     <div>
       <Card style={{ marginBottom: 24 }}>
         <Row gutter={16} align="middle" justify="space-between">
-          <Col>
-            <Select
-              value={selectedRoute}
-              onChange={setSelectedRoute}
-              style={{ width: 200 }}
-              options={[
-                { value: '北京-上海', label: '北京 ↔ 上海' },
-                { value: '广州-北京', label: '广州 ↔ 北京' },
-              ]}
-            />
-          </Col>
+        <Col span={7}>
+              <Form.Item label="出发地">
+                <AutoComplete
+                  options={options}
+                  onChange={handleDepartureChange}
+                  placeholder="请输入出发城市"
+                  prefix={<RocketOutlined rotate={-45} />}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={7}>
+              <Form.Item label="目的地">
+                <AutoComplete
+                  options={options}
+                  onChange={handleArrivalChange}
+                  placeholder="请输入到达城市"
+                  prefix={<RocketOutlined rotate={45} />}
+                />
+              </Form.Item>
+            </Col>
+              <Form.Item label="出发日期">
+                <DatePicker 
+                  style={{ width: '100%' }}
+                  onChange={handleDateChange}
+                  prefix={<CalendarOutlined />}
+                />
+              </Form.Item>
+              <Form.Item>
+              <Button type="primary" icon={<SearchOutlined />} onClick={handleSubmit}>
+                搜索航线
+              </Button>
+            </Form.Item>
+
           <Col>
             <Radio.Group 
               value={activeView} 
@@ -82,10 +102,6 @@ const priceData = {
               <Radio.Button value="trends">数量分析</Radio.Button>
               <Radio.Button value="top5">时段分析</Radio.Button>
             </Radio.Group>
-            <Radio.Group value={timeRange} onChange={e => setTimeRange(e.target.value)}>
-              <Radio.Button value="week">周视图</Radio.Button>
-              <Radio.Button value="month">月视图</Radio.Button>
-            </Radio.Group>
           </Col>
         </Row>
       </Card>
@@ -93,7 +109,7 @@ const priceData = {
       {activeView === 'main' ? (
         <>
           <Row gutter={24}>
-            <Col span={16}>
+            <Col span={24}>
               <Card 
                 title={
                   <span>
@@ -127,7 +143,7 @@ const priceData = {
                 />
               </Card>
             </Col>
-            <Col span={8}>
+            {/* <Col span={8}>
               <Card title="当前优惠航班" style={{ marginBottom: 24 }}>
                 {discountFlights.map((flight, index) => (
                   <Card.Grid style={{ width: '100%' }} key={index}>
@@ -148,7 +164,7 @@ const priceData = {
                   </Card.Grid>
                 ))}
               </Card>
-            </Col>
+            </Col> */}
           </Row>
         </>
       ) : activeView === 'trends' ? (
@@ -166,7 +182,7 @@ const priceData = {
           <Column
             data={monthlyTrends}
             xField="month"
-            yField="flights"
+            yField="count"
             label={{
               position: 'top',
               style: {
@@ -181,7 +197,7 @@ const priceData = {
               month: {
                 alias: '月份',
               },
-              flights: {
+              count: {
                 alias: '航班数量',
               },
             }}
@@ -204,9 +220,9 @@ const priceData = {
         <Col span={12}>
           <Card title="时段分布">
             <Bar
-              data={priceData.dayTime}
+              data={dayTime}
               xField="time"
-              yField="avgPrice"
+              yField="count"
               columnStyle={{
                 radius: [4, 4, 0, 0],
               }}
@@ -219,9 +235,9 @@ const priceData = {
         <Col span={12}>
           <Card title="经停分析">
             <Pie
-              data={priceData.stopover}
-              angleField="percentage"
-              colorField="type"
+              data={stopover}
+              angleField="count"
+              colorField="stopCount"
               radius={0.8}
               label={{
                 type: 'outer',

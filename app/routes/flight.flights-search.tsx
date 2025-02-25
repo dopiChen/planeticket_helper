@@ -54,12 +54,6 @@ const FlightSearch = () => {
   const handleDepartureTimeChange = (value: string) => {
     setFilters((prev) => ({ ...prev, departureTime: value }));
   };
-
-  // 更新机型选择
-  const handleAircraftChange = (checkedValues: string[]) => {
-    setFilters((prev) => ({ ...prev, aircraftTypes: checkedValues }));
-  };
-
   // 更新出发地
   const handleDepartureChange = (value: string) => {
     setFilters((prev) => ({ ...prev, departureCity: value }));
@@ -161,27 +155,27 @@ const FlightSearch = () => {
         <Form layout="horizontal">
           <Row gutter={16}>
             <Col span={7}>
-              <Form.Item label="出发地">
+              <Form.Item label="departure city">
                 <AutoComplete
                   options={options}
                   onChange={handleDepartureChange}
-                  placeholder="请输入出发城市"
+                  placeholder="Please enter the departure city"
                   prefix={<RocketOutlined rotate={-45} />}
                 />
               </Form.Item>
             </Col>
             <Col span={7}>
-              <Form.Item label="目的地">
+              <Form.Item label="arrival city">
                 <AutoComplete
                   options={options}
                   onChange={handleArrivalChange}
-                  placeholder="请输入到达城市"
+                  placeholder="Please enter the arrive city"
                   prefix={<RocketOutlined rotate={45} />}
                 />
               </Form.Item>
             </Col>
             <Col span={7}>
-              <Form.Item label="出发日期">
+              <Form.Item label="departure day">
                 <DatePicker 
                   style={{ width: '100%' }}
                   onChange={handleDateChange}
@@ -201,31 +195,31 @@ const FlightSearch = () => {
       <Row gutter={24}>
         {/* 筛选器侧边栏 */}
         <Col span={6}>
-          <Card title={<><FilterOutlined /> 筛选条件</>}>
+          <Card title={<><FilterOutlined /> Filter criteria</>}>
             <div style={{ marginBottom: 16 }}>
-              <Title level={5}>航空公司</Title>
+              <Title level={5}>Airline Company</Title>
               <Checkbox.Group onChange={handleAirlineChange} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <Checkbox value="CA">中国国际航空</Checkbox>
-                <Checkbox value="MU">东方航空</Checkbox>
-                <Checkbox value="CZ">南方航空</Checkbox>
-                <Checkbox value="HU">海南航空</Checkbox>
-                <Checkbox value="MF">厦门航空</Checkbox>
-                <Checkbox value="9C">春秋航空</Checkbox>
+                <Checkbox value="CA">American Airlines</Checkbox>
+                <Checkbox value="MU">Delta Air Lines</Checkbox>
+                <Checkbox value="CZ">United Airlines</Checkbox>
+                <Checkbox value="HU">JetBlue Airways</Checkbox>
+                <Checkbox value="MF">Spirit Airlines</Checkbox>
+                <Checkbox value="9C">Sun Country Airlines</Checkbox>
               </Checkbox.Group>
             </div>
             
             <Divider />
             
             <div style={{ marginBottom: 16 }}>
-              <Title level={5}>价格区间</Title>
+              <Title level={5}>price Range</Title>
               <Slider 
                 range 
                 defaultValue={[0, 5000]} 
                 max={10000}
                 onChange={handlePriceChange}
                 marks={{
-                  0: '¥0',
-                  10000: '¥10000'
+                  0: '$0',
+                  10000: '$1000'
                 }}
               />
             </div>
@@ -233,37 +227,16 @@ const FlightSearch = () => {
             <Divider />
 
             <div style={{ marginBottom: 16 }}>
-              <Title level={5}>起飞时间</Title>
+              <Title level={5}>take-off time</Title>
               <Select style={{ width: '100%' }} defaultValue="all" onChange={handleDepartureTimeChange}>
-                <Option value="all">不限</Option>
-                <Option value="morning">早上 (06:00-12:00)</Option>
-                <Option value="afternoon">下午 (12:00-18:00)</Option>
-                <Option value="evening">晚上 (18:00-24:00)</Option>
+                <Option value="all">all</Option>
+                <Option value="morning">morning(06:00-12:00)</Option>
+                <Option value="afternoon">afternoon(12:00-18:00)</Option>
+                <Option value="evening">evening(18:00-24:00)</Option>
               </Select>
             </div>
 
             <Divider />
-
-            <div>
-              <Title level={5}>机型选择</Title>
-              <Checkbox.Group onChange={handleAircraftChange} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <Checkbox value="737-800">波音737-800</Checkbox>
-                <Checkbox value="737-max">波音737 MAX</Checkbox>
-                <Checkbox value="787-9">波音787-9</Checkbox>
-                <Checkbox value="a320">空客A320</Checkbox>
-                <Checkbox value="a320neo">空客A320neo</Checkbox>
-                <Checkbox value="a350">空客A350</Checkbox>
-                <Checkbox value="a330-300">空客A330-300</Checkbox>
-                <Checkbox value="777-300er">波音777-300ER</Checkbox>
-                <Checkbox value="a380">空客A380</Checkbox>
-                <Checkbox value="emb190">巴西航空工业E190</Checkbox>
-                <Checkbox value="crj900">加拿大航空CRJ900</Checkbox>
-                <Checkbox value="q400">德哈维兰Q400</Checkbox>
-                <Checkbox value="arj21">中国商飞ARJ21</Checkbox>
-                <Checkbox value="c919">中国商飞C919</Checkbox>
-              </Checkbox.Group>
-            </div>
-
             <Divider />
 
             <button onClick={handleSubmit}>搜索航班</button>

@@ -33,7 +33,7 @@ export default function FlightLayout() {
     {
       key: 'price-analysis',
       icon: <LineChartOutlined />,
-      label: <Link to="/flight/price-analysis">价格分析</Link>,
+      label: <Link to="/flight/price-analysis">价格预测</Link>,
     },
     {
       key: 'flight-trends',

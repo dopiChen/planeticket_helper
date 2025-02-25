@@ -82,6 +82,48 @@ export interface PriceAnalysisData {
 }
 
 
+//...航班趋势页面
+
+//航班趋势搜索条件
+
+export interface FlightTrendsCriteria {
+  departureCity: string;
+  arrivalCity: string;
+  departureDate: string;
+}
+
+
+//航班热力图数据
+
+export interface HeatmapData {
+  day: string;
+  hour: number;
+  value: number;
+}
+
+//航班数量分布数据
+
+export interface FlightCountDistribution {
+  month: string;
+  count: number;
+}
+
+// 航班时间分布
+
+export interface FlightTimeDistribution {
+  time: string;
+  count: number;
+}
+
+//航班经停次数分布
+
+export interface FlightStopCountDistribution {
+  stopCount: number;
+  count: number;
+}
+
+
+
 
 
 
